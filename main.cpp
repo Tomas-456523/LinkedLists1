@@ -16,7 +16,7 @@ void CinIgnoreAll(bool force = false) {
 
 void AllCaps(char* word) {
     for (int i = 0; i < strlen(word); i++) {
-        word[i] = toupper(word[i]);
+        word[i] = toupper((unsigned char)word[i]);
     }
 }
 
@@ -99,7 +99,18 @@ void addNode(Node*& current) {
         current->setNext(node);
     }
     
-    cout << "Successfully added " << firstname << " after " << current->getStudent()->getName(1) << "!";
+    cout << "\nSuccessfully added " << firstname;
+    if (current->getNext() != current) {
+        cout << " after " << current->getStudent()->getName(0);
+    }
+    cout << "!";
+}
+
+void printStudent(Student* student, bool newline = true) {
+    if (newline) {
+        cout << "\n";
+    }
+    cout << student->getName(0) << " " << student->getName(1) << " (" << student->getID() << ") - GPA of " << student->getGPA();
 }
 
 void goNext(Node*& current) {
@@ -108,8 +119,8 @@ void goNext(Node*& current) {
         return;
     }
     current = current->getNext();
-    Student* student = current->getStudent();
-    cout << "\nCurrent student: " << student->getName(1) << " " << student->getName(2) << " (" << student->getID() << ")";
+    cout << "\nCurrent student: ";
+    printStudent(current->getStudent(), false);
 }
 
 void deleteNode(Node*& current) {
@@ -117,41 +128,60 @@ void deleteNode(Node*& current) {
         cout << "\nThere are no students to delete. (type ADD for add)";
         return;
     }
-    Node* todel = current;
-    while (current->getNext() != todel) {
-        current = current->getNext();
+    Node* previous = current;
+    while (previous->getNext() != current) {
+        previous = previous->getNext();
     }
-    current->setNext(todel->getNext());
-    cout << "\nSuccessfully deleted " << todel->getStudent()->getName(1) << "!";
-    if (current == todel) {
+    
+    cout << "\nSuccessfully deleted " << current->getStudent()->getName(0) << "!";
+    if (current == current->getNext()) {
         current = NULL;
+    } else {
+        goNext(current);
     }
+    Node* todel = previous->getNext();
+    previous->setNext(todel->getNext());
     delete todel;
-    goNext(current);
+    if (current == NULL) {
+        cout << "\nThere are no students left.";
+    }
 }
 
 void analyze(Node* current) {
     if (current == NULL) {
-        cout << "\nThere are no students to analyze. (type ADD for add)";
+        cout << "\nThere are no students to print. (type ADD for add)";
         return;
     }
-    Student* student = current->getStudent();
-    cout << student->getName(1) << " " << student->getName(2) << " (" << student->getID() << ") - GPA of " << student->getGPA();
+    printStudent(current->getStudent());
 }
 
 void average(Node* current) {
     if (current == NULL) {
-        cout << "\nThere are no students. (type ADD for add)";
+        cout << "\nThere are no students with GPAs to average. (type ADD for add)";
         return;
     }
     Node* init = current;
-    float avg = current->getStudent()->getGPA();
-    current = current->getNext();
-    while (current != init) {
+    float avg = 0;
+    int i = 0;
+    do {
         avg += current->getStudent()->getGPA();
         current = current->getNext();
+        i++;
+    } while (current != init);
+    cout << "\nAverage GPA: " << fixed << setprecision(2) << avg/i;
+}
+
+void printAll(Node* current) {
+    if (current == NULL) {
+        cout << "\nThere are no students to print. (type ADD for add)";
+        return;
     }
-    cout << "Average GPA: " << fixed << setprecision(2) << avg;
+    cout << "Students:";
+    Node* init = current;
+    do {
+        printStudent(current->getStudent());
+        current = current->getNext();
+    } while (current != init);
 }
 
 int main() {
@@ -172,15 +202,17 @@ int main() {
         if (!strcmp(command, "ADD")) {
             addNode(current);
         } else if (!strcmp(command, "DELETE")) {
-            
+            deleteNode(current);
         } else if (!strcmp(command, "NEXT")) {
             goNext(current);
-        } else if (!strcmp(command, "ANALYZE")) {
+        } else if (!strcmp(command, "PRINT")) {
             analyze(current);
+        } else if (!strcmp(command, "PRINT ALL")) {
+            printAll(current);
         } else if (!strcmp(command, "AVERAGE")) {
             average(current);
         } else if (!strcmp(command, "HELP")) {
-            cout << "\nYour command words are:\nADD\nDELETE\nNEXT\nANALYZE\nAVERAGE\nHELP\nQUIT";
+            cout << "\nYour command words are:\nADD\nDELETE\nNEXT\nPRINT\nPRINT ALL\nAVERAGE\nHELP\nQUIT";
         } else if (!strcmp(command, "QUIT")) {
             continuing = false;
         } else {
@@ -189,6 +221,19 @@ int main() {
         
         CinIgnoreAll();
     }
-    
+
     cout <<"\nHasta la vista, baby.\n";
+
+    if (current == NULL) {
+        return 0;
+    }
+
+    Node* start = current;
+    Node* previous;
+
+    do {
+        previous = current;
+        current = current->getNext();
+        delete previous;
+    } while (current != start);
 }

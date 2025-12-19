@@ -3,8 +3,6 @@
 #include "Node.h"
 #include "Student.h"
 
-class Student;
-
 Node::Node(Student* _student) {
     student = _student;
 }
